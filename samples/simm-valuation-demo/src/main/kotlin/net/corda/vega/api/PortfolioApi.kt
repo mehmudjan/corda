@@ -269,6 +269,7 @@ class PortfolioApi(val rpc: CordaRPCOps) {
         return withParty(partyName) { otherParty ->
             val existingSwap = getPortfolioWith(otherParty)
             val flowHandle = if (existingSwap == null) {
+                @Suppress("UNSUPPORTED_FEATURE")
                 rpc.startFlow(SimmFlow::Requester, otherParty, params.valuationDate)
             } else {
                 rpc.startFlow(SimmRevaluation::Initiator, getPortfolioStateAndRefWith(otherParty).ref, params.valuationDate)
