@@ -1,7 +1,6 @@
 package net.corda.node.services.network
 
 import net.corda.core.ThreadBox
-import net.corda.core.crypto.Party
 import net.corda.core.messaging.SingleMessageRecipient
 import net.corda.node.services.api.ServiceHubInternal
 import net.corda.node.utilities.*
@@ -19,21 +18,20 @@ import java.util.Collections.synchronizedMap
  */
 class PersistentNetworkMapService(services: ServiceHubInternal) : AbstractNetworkMapService(services) {
     private object Table : JDBCHashedTable("${NODE_DATABASE_PREFIX}network_map_nodes") {
-        val nodeParty = party("node_party_name", "node_party_key")
+        val nodePartyName = varchar("node_party_name", 255)
         val registrationInfo = blob("node_registration_info")
     }
 
-    override val nodeRegistrations: MutableMap<Party, NodeRegistrationInfo> = synchronizedMap(object : AbstractJDBCHashMap<Party, NodeRegistrationInfo, Table>(Table, loadOnInit = true) {
-        override fun keyFromRow(row: ResultRow): Party = Party(row[table.nodeParty.name], row[table.nodeParty.owningKey])
+    override val nodeRegistrations: MutableMap<String, NodeRegistrationInfo> = synchronizedMap(object : AbstractJDBCHashMap<String, NodeRegistrationInfo, Table>(Table, loadOnInit = true) {
+        override fun keyFromRow(row: ResultRow): String = row[table.nodePartyName]
 
         override fun valueFromRow(row: ResultRow): NodeRegistrationInfo = deserializeFromBlob(row[table.registrationInfo])
 
-        override fun addKeyToInsert(insert: InsertStatement, entry: Map.Entry<Party, NodeRegistrationInfo>, finalizables: MutableList<() -> Unit>) {
-            insert[table.nodeParty.name] = entry.key.name
-            insert[table.nodeParty.owningKey] = entry.key.owningKey
+        override fun addKeyToInsert(insert: InsertStatement, entry: Map.Entry<String, NodeRegistrationInfo>, finalizables: MutableList<() -> Unit>) {
+            insert[table.nodePartyName] = entry.key
         }
 
-        override fun addValueToInsert(insert: InsertStatement, entry: Map.Entry<Party, NodeRegistrationInfo>, finalizables: MutableList<() -> Unit>) {
+        override fun addValueToInsert(insert: InsertStatement, entry: Map.Entry<String, NodeRegistrationInfo>, finalizables: MutableList<() -> Unit>) {
             insert[table.registrationInfo] = serializeToBlob(entry.value, finalizables)
         }
     })

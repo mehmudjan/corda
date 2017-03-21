@@ -59,7 +59,6 @@ import javax.annotation.concurrent.ThreadSafe
 // a concept of identity changes over time, should that include the node for an identity? If so, that is likely to
 // replace this service.
 interface NetworkMapService {
-
     companion object {
         val DEFAULT_EXPIRATION_PERIOD: Period = Period.ofWeeks(4)
         val FETCH_TOPIC = "platform.network_map.fetch"
@@ -108,14 +107,14 @@ interface NetworkMapService {
 
     @CordaSerializable
     data class Update(val wireReg: WireNodeRegistration, val mapVersion: Int, val replyTo: MessageRecipients)
+
     @CordaSerializable
     data class UpdateAcknowledge(val mapVersion: Int, val replyTo: MessageRecipients)
 }
 
 @ThreadSafe
 class InMemoryNetworkMapService(services: ServiceHubInternal) : AbstractNetworkMapService(services) {
-
-    override val nodeRegistrations: MutableMap<Party, NodeRegistrationInfo> = ConcurrentHashMap()
+    override val nodeRegistrations: MutableMap<String, NodeRegistrationInfo> = ConcurrentHashMap()
     override val subscribers = ThreadBox(mutableMapOf<SingleMessageRecipient, LastAcknowledgeInfo>())
 
     init {
@@ -140,7 +139,7 @@ abstract class AbstractNetworkMapService(services: ServiceHubInternal) : Network
         private val logger = loggerFor<AbstractNetworkMapService>()
     }
 
-    protected abstract val nodeRegistrations: MutableMap<Party, NodeRegistrationInfo>
+    protected abstract val nodeRegistrations: MutableMap<String, NodeRegistrationInfo>
 
     // Map from subscriber address, to most recently acknowledged update map version.
     protected abstract val subscribers: ThreadBox<MutableMap<SingleMessageRecipient, LastAcknowledgeInfo>>
@@ -215,7 +214,7 @@ abstract class AbstractNetworkMapService(services: ServiceHubInternal) : Network
     }
 
     private fun processQueryRequest(request: QueryIdentityRequest): QueryIdentityResponse {
-        val candidate = nodeRegistrations[request.identity]?.reg
+        val candidate = nodeRegistrations[request.identity.name]?.reg
         // If the most recent record we have is of the node being removed from the map, then it's considered
         // as no match.
         val node = if (candidate == null || candidate.type == REMOVE) null else candidate.node
@@ -237,7 +236,7 @@ abstract class AbstractNetworkMapService(services: ServiceHubInternal) : Network
         // in on different threads, there is no risk of a race condition while checking
         // sequence numbers.
         val registrationInfo = try {
-            nodeRegistrations.compute(node.legalIdentity) { mapKey: Party, existing: NodeRegistrationInfo? ->
+            nodeRegistrations.compute(node.legalIdentity.name) { mapKey: String, existing: NodeRegistrationInfo? ->
                 require(!((existing == null || existing.reg.type == REMOVE) && change.type == REMOVE)) {
                     "Attempting to de-register unknown node"
                 }
