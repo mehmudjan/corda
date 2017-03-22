@@ -21,8 +21,8 @@ class VaultSoftLockManager(val vault: VaultService, smm: StateMachineManager) {
             if (change.addOrRemove == AddOrRemove.REMOVE && trackingFlowIds.contains(change.id.uuid)) {
                 log.trace( "${change.addOrRemove} Flow name ${change.logic.javaClass} with id ${change.id}")
                 unregisterSoftLocks(change.id, change.logic)
-                trackingFlowIds.remove(change.id.uuid)
             }
+            trackingFlowIds.remove(change.id.uuid)
         }
 
         // Discussion
