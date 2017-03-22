@@ -543,7 +543,7 @@ class NodeVaultService(private val services: ServiceHub, dataSourceProperties: P
         }
 
         if (gatheredAmount < amount) {
-            log.trace("Insufficient balance: requested $amount, available $gatheredAmount}")
+            log.trace("Insufficient balance: requested $amount, available $gatheredAmount")
             throw InsufficientBalanceException(amount - gatheredAmount)
         }
 
