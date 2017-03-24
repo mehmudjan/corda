@@ -215,7 +215,7 @@ bintrayConfig {
 }
 
 // API docs
-
+// TODO: Move into a docs module
 dokka {
     moduleName = 'corda'
     outputDirectory = 'docs/build/html/api/kotlin'
@@ -236,10 +236,16 @@ task buildDocs(dependsOn: ['apidocs', 'copyRobots'])
 
 task copyRobots(type: Copy) {
     from "docs/robots.txt"
-    into "docs/build/html/robots.txt"
+    into "docs/build/html"
 }
 
-task makeDocs(type: Exec) {
+task installDocsiteRequirements(type: Exec) {
+    workingDir 'docs'
+    commandLine 'cmd', '/c', 'sh ./install-docsite-requirements.sh' // Windows
+    commandLine './install-docsite-requirements.sh' // Linux
+}
+
+task makeDocs(type: Exec, dependsOn: ['installDocsiteRequirements']) {
     workingDir 'docs'
     commandLine 'cmd', '/c', 'make clean html' // Windows
     commandLine 'make clean html' // Linux
