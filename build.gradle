@@ -232,6 +232,18 @@ task dokkaJavadoc(type: org.jetbrains.dokka.gradle.DokkaTask) {
 }
 
 task apidocs(dependsOn: ['dokka', 'dokkaJavadoc'])
+task buildDocs(dependsOn: ['apidocs', 'copyRobots'])
+
+task copyRobots(type: Copy) {
+    from "docs/robots.txt"
+    into "docs/build/html/robots.txt"
+}
+
+task makeDocs(type: Exec) {
+    workingDir 'docs'
+    commandLine 'cmd', '/c', 'make clean html' // Windows
+    commandLine 'make clean html' // Linux
+}
 
 // Build a ZIP of all JARs required to compile the Cordapp template
 // Note: corda.jar is used at runtime so no runtime ZIP is necessary.
