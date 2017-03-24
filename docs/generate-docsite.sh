@@ -2,11 +2,6 @@
 
 set -xeo pipefail
 
-if [ ! -e ./gradlew ]; then
-    echo "Run from the root directory please"
-    exit 1
-fi
-
 (
     cd docs
 
@@ -33,25 +28,4 @@ fi
         echo "Installing pip dependencies ... "
         pip install -r requirements.txt
     fi
-
-    echo "Generating docsite ..."
-    echo
-
-    make clean html
 )
-
-echo
-echo "Generating API docs ..."
-echo
-./gradlew apidocs
-
-echo
-echo "Writing robots.txt"
-echo
-
-cat <<EOF >docs/build/html/robots.txt
-User-agent: *
-Disallow: /
-EOF
-
-echo "Done"
