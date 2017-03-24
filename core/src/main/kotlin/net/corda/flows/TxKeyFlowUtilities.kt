@@ -12,7 +12,8 @@ import java.security.cert.Certificate
 
 object TxKeyFlowUtilities {
     /**
-     * Receive a key from a counterparty.
+     * Receive a key from a counterparty. This would normally be triggered by a flow as part of a transaction assembly
+     * process.
      */
     @Suspendable
     fun receiveKey(flow: FlowLogic<*>, otherSide: Party): Pair<CompositeKey, Certificate?> {
@@ -24,7 +25,9 @@ object TxKeyFlowUtilities {
     }
 
     /**
-     * Generates a new key and then returns it to the counterparty and as the result from the function.
+     * Generates a new key and then returns it to the counterparty and as the result from the function. Note that this
+     * is an expensive operation, and should only be called once the calling flow has confirmed it wants to be part of
+     * a transaction with the counterparty, in order to avoid a DoS risk.
      */
     @Suspendable
     fun provideKey(flow: FlowLogic<*>, otherSide: Party): CompositeKey {
